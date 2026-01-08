@@ -5,10 +5,11 @@ import '@/lib/db/init';
 // GET /api/players/[id] - Get a single player by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const playerId = parseInt(params.id);
+    const { id } = await params;
+    const playerId = parseInt(id);
 
     if (isNaN(playerId)) {
       return NextResponse.json(
@@ -42,10 +43,11 @@ export async function GET(
 // PUT /api/players/[id] - Update a player
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const playerId = parseInt(params.id);
+    const { id } = await params;
+    const playerId = parseInt(id);
     const body = await request.json();
     const { name, date_of_birth, role, team_id } = body;
 
@@ -88,10 +90,11 @@ export async function PUT(
 // DELETE /api/players/[id] - Delete a player
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const playerId = parseInt(params.id);
+    const { id } = await params;
+    const playerId = parseInt(id);
 
     if (isNaN(playerId)) {
       return NextResponse.json(

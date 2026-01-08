@@ -5,10 +5,11 @@ import '@/lib/db/init';
 // GET /api/innings/[id] - Get a single innings by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const inningsId = parseInt(params.id);
+    const { id } = await params;
+    const inningsId = parseInt(id);
 
     if (isNaN(inningsId)) {
       return NextResponse.json(
@@ -43,10 +44,11 @@ export async function GET(
 // DELETE /api/innings/[id] - Delete an innings
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const inningsId = parseInt(params.id);
+    const { id } = await params;
+    const inningsId = parseInt(id);
 
     if (isNaN(inningsId)) {
       return NextResponse.json(

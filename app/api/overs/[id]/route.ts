@@ -5,10 +5,11 @@ import '@/lib/db/init';
 // GET /api/overs/[id] - Get a single over by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const overId = parseInt(params.id);
+    const { id } = await params;
+    const overId = parseInt(id);
 
     if (isNaN(overId)) {
       return NextResponse.json(
@@ -42,10 +43,11 @@ export async function GET(
 // DELETE /api/overs/[id] - Delete an over
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const overId = parseInt(params.id);
+    const { id } = await params;
+    const overId = parseInt(id);
 
     if (isNaN(overId)) {
       return NextResponse.json(

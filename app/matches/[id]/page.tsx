@@ -136,11 +136,19 @@ export default function MatchDetailPage() {
           <div className="p-6">
             {activeTab === 'overview' && (
               <div>
-                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                  Match Overview
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Match Overview
+                  </h2>
+                  <Link
+                    href={`/matches/${matchId}/score`}
+                    className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-medium"
+                  >
+                    Start Scoring
+                  </Link>
+                </div>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Detailed match statistics and playing XI will be displayed here.
+                  Click "Start Scoring" to begin recording the match ball by ball.
                 </p>
               </div>
             )}

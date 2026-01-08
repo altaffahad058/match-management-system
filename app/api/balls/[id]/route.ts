@@ -5,10 +5,11 @@ import '@/lib/db/init';
 // GET /api/balls/[id] - Get a single ball by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ballId = parseInt(params.id);
+    const { id } = await params;
+    const ballId = parseInt(id);
 
     if (isNaN(ballId)) {
       return NextResponse.json(
@@ -45,10 +46,11 @@ export async function GET(
 // PUT /api/balls/[id] - Update a ball
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ballId = parseInt(params.id);
+    const { id } = await params;
+    const ballId = parseInt(id);
     const body = await request.json();
     const {
       over_id,
@@ -124,10 +126,11 @@ export async function PUT(
 // DELETE /api/balls/[id] - Delete a ball
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ballId = parseInt(params.id);
+    const { id } = await params;
+    const ballId = parseInt(id);
 
     if (isNaN(ballId)) {
       return NextResponse.json(

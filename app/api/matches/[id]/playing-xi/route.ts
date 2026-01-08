@@ -5,10 +5,11 @@ import '@/lib/db/init';
 // GET /api/matches/[id]/playing-xi - Get playing XI for a match
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const matchId = parseInt(params.id);
+    const { id } = await params;
+    const matchId = parseInt(id);
 
     if (isNaN(matchId)) {
       return NextResponse.json(
@@ -39,10 +40,11 @@ export async function GET(
 // POST /api/matches/[id]/playing-xi - Add players to playing XI
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const matchId = parseInt(params.id);
+    const { id } = await params;
+    const matchId = parseInt(id);
     const body = await request.json();
     const { players } = body; // Array of { team_id, player_id, is_playing_xi }
 

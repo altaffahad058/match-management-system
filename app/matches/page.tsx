@@ -128,7 +128,10 @@ export default function MatchesPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Matches</h1>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Matches</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Manage and score cricket matches</p>
+          </div>
           <button
             onClick={() => {
               setShowForm(!showForm);
@@ -142,9 +145,9 @@ export default function MatchesPage() {
                 venue: '',
               });
             }}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium shadow-lg"
           >
-            {showForm ? 'Cancel' : 'Add Match'}
+            {showForm ? 'Cancel' : '+ New Match'}
           </button>
         </div>
 
@@ -257,7 +260,7 @@ export default function MatchesPage() {
           </form>
         )}
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -305,6 +308,12 @@ export default function MatchesPage() {
                       className="text-blue-600 hover:text-blue-900 dark:text-blue-400"
                     >
                       View
+                    </Link>
+                    <Link
+                      href={`/matches/${match.id}/score`}
+                      className="text-green-600 hover:text-green-900 dark:text-green-400"
+                    >
+                      Score
                     </Link>
                     <button
                       onClick={() => handleEdit(match)}

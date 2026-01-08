@@ -5,10 +5,11 @@ import '@/lib/db/init';
 // GET /api/matches/[id] - Get a single match by ID with full details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const matchId = parseInt(params.id);
+    const { id } = await params;
+    const matchId = parseInt(id);
 
     if (isNaN(matchId)) {
       return NextResponse.json(
@@ -44,10 +45,11 @@ export async function GET(
 // PUT /api/matches/[id] - Update a match
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const matchId = parseInt(params.id);
+    const { id } = await params;
+    const matchId = parseInt(id);
     const body = await request.json();
     const { team1_id, team2_id, toss_winner_team_id, elected_to, match_date, venue } = body;
 
@@ -104,10 +106,11 @@ export async function PUT(
 // DELETE /api/matches/[id] - Delete a match
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const matchId = parseInt(params.id);
+    const { id } = await params;
+    const matchId = parseInt(id);
 
     if (isNaN(matchId)) {
       return NextResponse.json(
