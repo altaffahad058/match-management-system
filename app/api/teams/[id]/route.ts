@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { queryOne, query } from '@/lib/db/connection';
-import '@/lib/db/init';
+import { NextRequest, NextResponse } from "next/server";
+import { queryOne, query } from "@/lib/db/connection";
+import "@/lib/db/init";
 
 // GET /api/teams/[id] - Get a single team by ID
 export async function GET(
@@ -12,29 +12,25 @@ export async function GET(
     const teamId = parseInt(id);
 
     if (isNaN(teamId)) {
-      return NextResponse.json(
-        { error: 'Invalid team ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
     }
 
     // TODO: Write SQL query to fetch a team by ID
     // Query should: SELECT team with matching id
     // Expected columns: id, name, country_code
-    const team = await queryOne(``, [teamId]);
+    const team = await queryOne(`SELECT id, name, country_code FROM Teams WHERE id = $1`, [
+      teamId,
+    ]);
 
     if (!team) {
-      return NextResponse.json(
-        { error: 'Team not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
     return NextResponse.json(team);
   } catch (error) {
-    console.error('Error fetching team:', error);
+    console.error("Error fetching team:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch team' },
+      { error: "Failed to fetch team" },
       { status: 500 }
     );
   }
@@ -52,15 +48,12 @@ export async function PUT(
     const { name, country_code } = body;
 
     if (isNaN(teamId)) {
-      return NextResponse.json(
-        { error: 'Invalid team ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
     }
 
     if (!name || !country_code) {
       return NextResponse.json(
-        { error: 'Name and country_code are required' },
+        { error: "Name and country_code are required" },
         { status: 400 }
       );
     }
@@ -68,20 +61,20 @@ export async function PUT(
     // TODO: Write SQL query to update a team
     // Query should: UPDATE team with matching id, set name and country_code, return updated team
     // Use RETURNING clause to get the updated row
-    const team = await queryOne(``, [name, country_code, teamId]);
+    const team = await queryOne(
+      `UPDATE Teams SET name = $1, country_code = $2 WHERE id = $3 RETURNING id, name, country_code`,
+      [name, country_code, teamId]
+    );
 
     if (!team) {
-      return NextResponse.json(
-        { error: 'Team not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
     return NextResponse.json(team);
   } catch (error) {
-    console.error('Error updating team:', error);
+    console.error("Error updating team:", error);
     return NextResponse.json(
-      { error: 'Failed to update team' },
+      { error: "Failed to update team" },
       { status: 500 }
     );
   }
@@ -97,24 +90,20 @@ export async function DELETE(
     const teamId = parseInt(id);
 
     if (isNaN(teamId)) {
-      return NextResponse.json(
-        { error: 'Invalid team ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid team ID" }, { status: 400 });
     }
 
     // TODO: Write SQL query to delete a team
     // Query should: DELETE team with matching id
     // Consider: Should this cascade delete related records (players, matches)? Or should it fail if team has related data?
-    await query(``, [teamId]);
+    await query(`DELETE FROM Teams WHERE id = $1`, [teamId]);
 
-    return NextResponse.json({ message: 'Team deleted successfully' });
+    return NextResponse.json({ message: "Team deleted successfully" });
   } catch (error) {
-    console.error('Error deleting team:', error);
+    console.error("Error deleting team:", error);
     return NextResponse.json(
-      { error: 'Failed to delete team' },
+      { error: "Failed to delete team" },
       { status: 500 }
     );
   }
 }
-

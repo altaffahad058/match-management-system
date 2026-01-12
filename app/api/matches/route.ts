@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/connection';
-import '@/lib/db/init';
+import { NextRequest, NextResponse } from "next/server";
+import { query, queryOne } from "@/lib/db/connection";
+import "@/lib/db/init";
 
 // GET /api/matches - Get all matches
 export async function GET() {
@@ -8,16 +8,22 @@ export async function GET() {
     // TODO: Write SQL query to fetch all matches with team information
     // Query should: SELECT matches with team names via JOINs
     // JOIN teams table three times (once for team1, once for team2, once for toss_winner)
-    // Expected columns: id, team1_id, team2_id, team1_name, team2_name, 
+    // Expected columns: id, team1_id, team2_id, team1_name, team2_name,
     //                   toss_winner_team_id, toss_winner_team_name, elected_to, match_date, venue
     // Order by match_date DESC (most recent first)
-    const matches = await query(``);
+    const matches = await query(`
+      SELECT m.id, m.team1_id, m.team2_id, t1.name AS team1_name, t2.name AS team2_name, t.name AS toss_winner_team_name, m.toss_winner_team_id, m.elected_to, m.match_date::text AS match_date, m.venue, m.status
+      FROM Matches m
+      INNER JOIN Teams t1 ON m.team1_id = t1.id
+      INNER JOIN Teams t2 ON m.team2_id = t2.id
+      INNER JOIN Teams t ON m.toss_winner_team_id = t.id
+      ORDER BY m.match_date DESC`);
 
     return NextResponse.json(matches);
   } catch (error) {
-    console.error('Error fetching matches:', error);
+    console.error("Error fetching matches:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch matches' },
+      { error: "Failed to fetch matches" },
       { status: 500 }
     );
   }
@@ -27,23 +33,37 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { team1_id, team2_id, toss_winner_team_id, elected_to, match_date, venue } = body;
+    const {
+      team1_id,
+      team2_id,
+      toss_winner_team_id,
+      elected_to,
+      match_date,
+      venue,
+    } = body;
 
-    if (!team1_id || !team2_id || !toss_winner_team_id || !elected_to || !match_date || !venue) {
+    if (
+      !team1_id ||
+      !team2_id ||
+      !toss_winner_team_id ||
+      !elected_to ||
+      !match_date ||
+      !venue
+    ) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: "All fields are required" },
         { status: 400 }
       );
     }
 
     if (team1_id === team2_id) {
       return NextResponse.json(
-        { error: 'Team 1 and Team 2 must be different' },
+        { error: "Team 1 and Team 2 must be different" },
         { status: 400 }
       );
     }
 
-    if (!['bat', 'bowl'].includes(elected_to)) {
+    if (!["bat", "bowl"].includes(elected_to)) {
       return NextResponse.json(
         { error: 'elected_to must be either "bat" or "bowl"' },
         { status: 400 }
@@ -54,15 +74,27 @@ export async function POST(request: NextRequest) {
     // Query should: INSERT a new match with all required fields
     // Validate that team1_id, team2_id, and toss_winner_team_id exist in teams table
     // Use RETURNING clause to get the created match
-    const match = await query(``, [parseInt(team1_id), parseInt(team2_id), parseInt(toss_winner_team_id), elected_to, match_date, venue]);
+    const match = await queryOne(
+      `INSERT INTO Matches (team1_id, team2_id, toss_winner_team_id, elected_to, match_date, venue, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, team1_id, team2_id, toss_winner_team_id, elected_to, match_date::text AS match_date, venue, status`,
+      [
+        parseInt(team1_id),
+        parseInt(team2_id),
+        parseInt(toss_winner_team_id),
+        elected_to,
+        match_date,
+        venue,
+        "scheduled",
+      ]
+    );
 
-    return NextResponse.json(match[0], { status: 201 });
+    return NextResponse.json(match, { status: 201 });
   } catch (error) {
-    console.error('Error creating match:', error);
+    console.error("Error creating match:", error);
     return NextResponse.json(
-      { error: 'Failed to create match' },
+      { error: "Failed to create match" },
       { status: 500 }
     );
   }
 }
-

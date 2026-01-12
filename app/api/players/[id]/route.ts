@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { queryOne, query } from '@/lib/db/connection';
-import '@/lib/db/init';
+import { NextRequest, NextResponse } from "next/server";
+import { queryOne, query } from "@/lib/db/connection";
+import "@/lib/db/init";
 
 // GET /api/players/[id] - Get a single player by ID
 export async function GET(
@@ -12,29 +12,30 @@ export async function GET(
     const playerId = parseInt(id);
 
     if (isNaN(playerId)) {
-      return NextResponse.json(
-        { error: 'Invalid player ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid player ID" }, { status: 400 });
     }
 
     // TODO: Write SQL query to fetch a player by ID with team information
     // Query should: SELECT player with matching id, JOIN with teams to get team name
     // Expected columns: id, name, date_of_birth, role, team_id, team_name
-    const player = await queryOne(``, [playerId]);
+    const player = await queryOne(
+      `
+      SELECT p.id, p.name, p.date_of_birth, p.role, p.team_id, t.name AS team_name
+      FROM Players p
+      INNER JOIN Teams t ON t.id = p.team_id
+      WHERE p.id = $1`,
+      [playerId]
+    );
 
     if (!player) {
-      return NextResponse.json(
-        { error: 'Player not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Player not found" }, { status: 404 });
     }
 
     return NextResponse.json(player);
   } catch (error) {
-    console.error('Error fetching player:', error);
+    console.error("Error fetching player:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch player' },
+      { error: "Failed to fetch player" },
       { status: 500 }
     );
   }
@@ -52,15 +53,12 @@ export async function PUT(
     const { name, date_of_birth, role, team_id } = body;
 
     if (isNaN(playerId)) {
-      return NextResponse.json(
-        { error: 'Invalid player ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid player ID" }, { status: 400 });
     }
 
     if (!name || !date_of_birth || !role || !team_id) {
       return NextResponse.json(
-        { error: 'Name, date_of_birth, role, and team_id are required' },
+        { error: "Name, date_of_birth, role, and team_id are required" },
         { status: 400 }
       );
     }
@@ -68,20 +66,23 @@ export async function PUT(
     // TODO: Write SQL query to update a player
     // Query should: UPDATE player with matching id, set name, date_of_birth, role, team_id
     // Use RETURNING clause to get the updated row
-    const player = await queryOne(``, [name, date_of_birth, role, parseInt(team_id), playerId]);
+    const player = await queryOne(
+      `UPDATE Players
+       SET name = $1, date_of_birth = $2, role = $3, team_id = $4
+       WHERE id = $5
+       RETURNING id, name, date_of_birth::text AS date_of_birth, role, team_id`,
+      [name, date_of_birth, role, parseInt(team_id), playerId]
+    );
 
     if (!player) {
-      return NextResponse.json(
-        { error: 'Player not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Player not found" }, { status: 404 });
     }
 
     return NextResponse.json(player);
   } catch (error) {
-    console.error('Error updating player:', error);
+    console.error("Error updating player:", error);
     return NextResponse.json(
-      { error: 'Failed to update player' },
+      { error: "Failed to update player" },
       { status: 500 }
     );
   }
@@ -97,24 +98,25 @@ export async function DELETE(
     const playerId = parseInt(id);
 
     if (isNaN(playerId)) {
-      return NextResponse.json(
-        { error: 'Invalid player ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid player ID" }, { status: 400 });
     }
 
     // TODO: Write SQL query to delete a player
     // Query should: DELETE player with matching id
     // Consider: Should this cascade delete related records? Or should it fail if player has related data?
-    await query(``, [playerId]);
+    await query(
+      `
+      DELETE FROM Players
+      WHERE id=$1`,
+      [playerId]
+    );
 
-    return NextResponse.json({ message: 'Player deleted successfully' });
+    return NextResponse.json({ message: "Player deleted successfully" });
   } catch (error) {
-    console.error('Error deleting player:', error);
+    console.error("Error deleting player:", error);
     return NextResponse.json(
-      { error: 'Failed to delete player' },
+      { error: "Failed to delete player" },
       { status: 500 }
     );
   }
 }
-

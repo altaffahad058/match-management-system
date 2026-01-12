@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 
 interface Match {
   id: number;
@@ -15,6 +15,7 @@ interface Match {
   elected_to: string;
   match_date: string;
   venue: string;
+  status: "scheduled" | "live" | "completed";
 }
 
 interface Innings {
@@ -30,11 +31,13 @@ interface Innings {
 export default function MatchDetailPage() {
   const params = useParams();
   const matchId = params.id as string;
-  
+
   const [match, setMatch] = useState<Match | null>(null);
   const [innings, setInnings] = useState<Innings[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'innings'>('overview');
+  const [activeTab, setActiveTab] = useState<"overview" | "innings">(
+    "overview"
+  );
 
   useEffect(() => {
     fetchMatch();
@@ -47,7 +50,7 @@ export default function MatchDetailPage() {
       const data = await response.json();
       setMatch(data);
     } catch (error) {
-      console.error('Error fetching match:', error);
+      console.error("Error fetching match:", error);
     } finally {
       setLoading(false);
     }
@@ -59,7 +62,7 @@ export default function MatchDetailPage() {
       const data = await response.json();
       setInnings(data);
     } catch (error) {
-      console.error('Error fetching innings:', error);
+      console.error("Error fetching innings:", error);
     }
   };
 
@@ -82,27 +85,54 @@ export default function MatchDetailPage() {
         </Link>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            {match.team1_name} vs {match.team2_name}
-          </h1>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {match.team1_name} vs {match.team2_name}
+            </h1>
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium capitalize ${
+                match.status === "live"
+                  ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                  : match.status === "completed"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                  : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+              }`}
+            >
+              {match.status}
+            </span>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-medium text-gray-700 dark:text-gray-300">Date:</span>{' '}
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                Date:
+              </span>{" "}
               <span className="text-gray-900 dark:text-white">
                 {new Date(match.match_date).toLocaleDateString()}
               </span>
             </div>
             <div>
-              <span className="font-medium text-gray-700 dark:text-gray-300">Venue:</span>{' '}
-              <span className="text-gray-900 dark:text-white">{match.venue}</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                Venue:
+              </span>{" "}
+              <span className="text-gray-900 dark:text-white">
+                {match.venue}
+              </span>
             </div>
             <div>
-              <span className="font-medium text-gray-700 dark:text-gray-300">Toss Winner:</span>{' '}
-              <span className="text-gray-900 dark:text-white">{match.toss_winner_team_name}</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                Toss Winner:
+              </span>{" "}
+              <span className="text-gray-900 dark:text-white">
+                {match.toss_winner_team_name}
+              </span>
             </div>
             <div>
-              <span className="font-medium text-gray-700 dark:text-gray-300">Elected To:</span>{' '}
-              <span className="text-gray-900 dark:text-white capitalize">{match.elected_to}</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                Elected To:
+              </span>{" "}
+              <span className="text-gray-900 dark:text-white capitalize">
+                {match.elected_to}
+              </span>
             </div>
           </div>
         </div>
@@ -111,21 +141,21 @@ export default function MatchDetailPage() {
           <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex -mb-px">
               <button
-                onClick={() => setActiveTab('overview')}
+                onClick={() => setActiveTab("overview")}
                 className={`px-6 py-3 text-sm font-medium ${
-                  activeTab === 'overview'
-                    ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                  activeTab === "overview"
+                    ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                 }`}
               >
                 Overview
               </button>
               <button
-                onClick={() => setActiveTab('innings')}
+                onClick={() => setActiveTab("innings")}
                 className={`px-6 py-3 text-sm font-medium ${
-                  activeTab === 'innings'
-                    ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                  activeTab === "innings"
+                    ? "border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                 }`}
               >
                 Innings ({innings.length})
@@ -134,32 +164,47 @@ export default function MatchDetailPage() {
           </div>
 
           <div className="p-6">
-            {activeTab === 'overview' && (
+            {activeTab === "overview" && (
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     Match Overview
                   </h2>
-                  <Link
-                    href={`/matches/${matchId}/score`}
-                    className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-medium"
-                  >
-                    Start Scoring
-                  </Link>
+                  {match.status === "completed" ? (
+                    <Link
+                      href={`/matches/${matchId}/score`}
+                      className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 font-medium"
+                    >
+                      View Summary
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/matches/${matchId}/score`}
+                      className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-medium"
+                    >
+                      {match.status === "live"
+                        ? "Continue Scoring"
+                        : "Start Scoring"}
+                    </Link>
+                  )}
                 </div>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Click "Start Scoring" to begin recording the match ball by ball.
+                  {match.status === "completed"
+                    ? "This match has finished. You can view the full scorecard."
+                    : "Click button above to record the match."}
                 </p>
               </div>
             )}
 
-            {activeTab === 'innings' && (
+            {activeTab === "innings" && (
               <div>
                 <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
                   Innings
                 </h2>
                 {innings.length === 0 ? (
-                  <p className="text-gray-600 dark:text-gray-400">No innings recorded yet.</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    No innings recorded yet.
+                  </p>
                 ) : (
                   <div className="space-y-4">
                     {innings.map((inn) => (
@@ -173,7 +218,8 @@ export default function MatchDetailPage() {
                               Innings {inn.innings_number}
                             </h3>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {inn.batting_team_name} batting vs {inn.bowling_team_name}
+                              {inn.batting_team_name} batting vs{" "}
+                              {inn.bowling_team_name}
                             </p>
                           </div>
                           <Link
@@ -195,4 +241,3 @@ export default function MatchDetailPage() {
     </div>
   );
 }
-

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 interface Ball {
   id?: number;
@@ -28,6 +28,12 @@ interface MatchScorecardProps {
   bowlingPlayers: Array<{ id: number; name: string }>;
   currentOver: number;
   totalOvers: number;
+  lastBowlerId?: number | null;
+  strikerId: number | null;
+  nonStrikerId: number | null;
+  onStrikerChange: (id: number) => void;
+  onNonStrikerChange: (id: number) => void;
+  isOverInProgress: boolean;
   onBallSubmit: (ball: Ball) => void;
 }
 
@@ -38,27 +44,42 @@ export default function MatchScorecard({
   bowlingPlayers,
   currentOver,
   totalOvers,
+  lastBowlerId,
+  strikerId,
+  nonStrikerId,
+  onStrikerChange,
+  onNonStrikerChange,
+  isOverInProgress,
   onBallSubmit,
 }: MatchScorecardProps) {
-  const [selectedBatsman, setSelectedBatsman] = useState<number | null>(null);
   const [selectedBowler, setSelectedBowler] = useState<number | null>(null);
   const [runs, setRuns] = useState<number>(0);
-  const [extraType, setExtraType] = useState<string>('');
+  const [extraType, setExtraType] = useState<string>("");
   const [extraRuns, setExtraRuns] = useState<number>(0);
-  const [wicketType, setWicketType] = useState<string>('');
+  const [wicketType, setWicketType] = useState<string>("");
   const [outPlayerId, setOutPlayerId] = useState<number | null>(null);
   const [isLegalDelivery, setIsLegalDelivery] = useState<boolean>(true);
   const [currentBall, setCurrentBall] = useState<number>(1);
 
   const handleSubmit = () => {
-    if (!selectedBatsman || !selectedBowler) {
-      alert('Please select batsman and bowler');
+    if (!strikerId || !nonStrikerId || !selectedBowler) {
+      alert("Please select striker, non-striker, and bowler");
+      return;
+    }
+
+    if (strikerId === nonStrikerId) {
+      alert("Striker and Non-Striker must be different players");
+      return;
+    }
+
+    if (wicketType && !outPlayerId) {
+      alert("Please select the out player");
       return;
     }
 
     const ball: Ball = {
       ball_number: currentBall,
-      batsman_id: selectedBatsman,
+      batsman_id: strikerId,
       bowler_id: selectedBowler,
       runs_off_bat: runs,
       extra_type: extraType || null,
@@ -69,20 +90,22 @@ export default function MatchScorecard({
     };
 
     onBallSubmit(ball);
-    
+
     // Reset form
     setRuns(0);
-    setExtraType('');
+    setExtraType("");
     setExtraRuns(0);
-    setWicketType('');
+    setWicketType("");
     setOutPlayerId(null);
     setIsLegalDelivery(true);
-    
+
     // Move to next ball
     if (currentBall < 6) {
       setCurrentBall(currentBall + 1);
     } else {
       setCurrentBall(1);
+      // Reset selected bowler for new over
+      setSelectedBowler(null);
     }
   };
 
@@ -94,20 +117,49 @@ export default function MatchScorecard({
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Batsman *
+            Striker *
           </label>
           <select
-            value={selectedBatsman || ''}
-            onChange={(e) => setSelectedBatsman(parseInt(e.target.value))}
+            value={strikerId || ""}
+            onChange={(e) => onStrikerChange(parseInt(e.target.value))}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             required
+            disabled={isOverInProgress && !!strikerId}
           >
-            <option value="">Select Batsman</option>
+            <option value="">Select Striker</option>
             {battingPlayers.map((player) => (
-              <option key={player.id} value={player.id}>
+              <option
+                key={player.id}
+                value={player.id}
+                disabled={player.id === nonStrikerId}
+              >
+                {player.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Non-Striker *
+          </label>
+          <select
+            value={nonStrikerId || ""}
+            onChange={(e) => onNonStrikerChange(parseInt(e.target.value))}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            required
+            disabled={isOverInProgress && !!nonStrikerId}
+          >
+            <option value="">Select Non-Striker</option>
+            {battingPlayers.map((player) => (
+              <option
+                key={player.id}
+                value={player.id}
+                disabled={player.id === strikerId}
+              >
                 {player.name}
               </option>
             ))}
@@ -119,15 +171,21 @@ export default function MatchScorecard({
             Bowler *
           </label>
           <select
-            value={selectedBowler || ''}
+            value={selectedBowler || ""}
             onChange={(e) => setSelectedBowler(parseInt(e.target.value))}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             required
+            disabled={isOverInProgress}
           >
             <option value="">Select Bowler</option>
             {bowlingPlayers.map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.name}
+              <option
+                key={player.id}
+                value={player.id}
+                disabled={player.id === lastBowlerId}
+              >
+                {player.name}{" "}
+                {player.id === lastBowlerId ? "(Bowled Last Over)" : ""}
               </option>
             ))}
           </select>
@@ -217,8 +275,10 @@ export default function MatchScorecard({
               Out Player
             </label>
             <select
-              value={outPlayerId || ''}
-              onChange={(e) => setOutPlayerId(e.target.value ? parseInt(e.target.value) : null)}
+              value={outPlayerId || ""}
+              onChange={(e) =>
+                setOutPlayerId(e.target.value ? parseInt(e.target.value) : null)
+              }
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="">Select Player</option>
@@ -243,9 +303,9 @@ export default function MatchScorecard({
           onClick={() => {
             setCurrentBall(1);
             setRuns(0);
-            setExtraType('');
+            setExtraType("");
             setExtraRuns(0);
-            setWicketType('');
+            setWicketType("");
             setOutPlayerId(null);
             setIsLegalDelivery(true);
           }}
@@ -257,4 +317,3 @@ export default function MatchScorecard({
     </div>
   );
 }
-

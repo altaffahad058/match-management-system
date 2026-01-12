@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { queryOne, query } from '@/lib/db/connection';
-import '@/lib/db/init';
+import { NextRequest, NextResponse } from "next/server";
+import { queryOne, query } from "@/lib/db/connection";
+import "@/lib/db/init";
 
 // GET /api/balls/[id] - Get a single ball by ID
 export async function GET(
@@ -12,32 +12,39 @@ export async function GET(
     const ballId = parseInt(id);
 
     if (isNaN(ballId)) {
-      return NextResponse.json(
-        { error: 'Invalid ball ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid ball ID" }, { status: 400 });
     }
 
     // TODO: Write SQL query to fetch a ball by ID with player information
     // Query should: SELECT ball with batsman, bowler, and out_player names via JOINs
-    // Expected columns: id, over_id, ball_number, batsman_id, bowler_id, 
+    // Expected columns: id, over_id, ball_number, batsman_id, bowler_id,
     //                   runs_off_bat, extra_type, extra_runs, is_legal_delivery,
     //                   wicket_type, out_player_id,
     //                   batsman_name, bowler_name, out_player_name
-    const ball = await queryOne(``, [ballId]);
+    const ball = await queryOne(
+      `
+      SELECT b.id, b.over_id, b.ball_number, b.batsman_id, b.bowler_id,
+      b.runs_off_bat, b.extra_type, b.extra_runs, b.is_legal_delivery,
+      b.wicket_type, b.out_player_id,
+      pbat.name as batsman_name, pbowl.name as bowler_name, pout.name as out_player_name
+      FROM Balls b
+      INNER JOIN Overs o ON b.over_id = o.id
+      INNER JOIN Players pbat ON b.batsman_id = pbat.id
+      INNER JOIN Players pbowl ON b.bowler_id = pbowl.id
+      INNER JOIN Players pout ON b.out_player_id = pout.id
+      WHERE b.id = $1`,
+      [ballId]
+    );
 
     if (!ball) {
-      return NextResponse.json(
-        { error: 'Ball not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Ball not found" }, { status: 404 });
     }
 
     return NextResponse.json(ball);
   } catch (error) {
-    console.error('Error fetching ball:', error);
+    console.error("Error fetching ball:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch ball' },
+      { error: "Failed to fetch ball" },
       { status: 500 }
     );
   }
@@ -62,28 +69,31 @@ export async function PUT(
       extra_runs,
       is_legal_delivery,
       wicket_type,
-      out_player_id
+      out_player_id,
     } = body;
 
     if (isNaN(ballId)) {
-      return NextResponse.json(
-        { error: 'Invalid ball ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid ball ID" }, { status: 400 });
     }
 
     // Validate extra_type if provided
-    if (extra_type && !['no_ball', 'wide', 'bye', 'leg_bye'].includes(extra_type)) {
+    if (
+      extra_type &&
+      !["no_ball", "wide", "bye", "leg_bye"].includes(extra_type)
+    ) {
       return NextResponse.json(
-        { error: 'extra_type must be one of: no_ball, wide, bye, leg_bye' },
+        { error: "extra_type must be one of: no_ball, wide, bye, leg_bye" },
         { status: 400 }
       );
     }
 
     // Validate wicket_type if provided
-    if (wicket_type && !['caught', 'run_out', 'bowled', 'lbw'].includes(wicket_type)) {
+    if (
+      wicket_type &&
+      !["caught", "run_out", "bowled", "lbw"].includes(wicket_type)
+    ) {
       return NextResponse.json(
-        { error: 'wicket_type must be one of: caught, run_out, bowled, lbw' },
+        { error: "wicket_type must be one of: caught, run_out, bowled, lbw" },
         { status: 400 }
       );
     }
@@ -103,21 +113,18 @@ export async function PUT(
       is_legal_delivery,
       wicket_type || null,
       out_player_id ? parseInt(out_player_id) : null,
-      ballId
+      ballId,
     ]);
 
     if (!ball) {
-      return NextResponse.json(
-        { error: 'Ball not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Ball not found" }, { status: 404 });
     }
 
     return NextResponse.json(ball);
   } catch (error) {
-    console.error('Error updating ball:', error);
+    console.error("Error updating ball:", error);
     return NextResponse.json(
-      { error: 'Failed to update ball' },
+      { error: "Failed to update ball" },
       { status: 500 }
     );
   }
@@ -133,23 +140,19 @@ export async function DELETE(
     const ballId = parseInt(id);
 
     if (isNaN(ballId)) {
-      return NextResponse.json(
-        { error: 'Invalid ball ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid ball ID" }, { status: 400 });
     }
 
     // TODO: Write SQL query to delete a ball
     // Query should: DELETE ball with matching id
     await query(``, [ballId]);
 
-    return NextResponse.json({ message: 'Ball deleted successfully' });
+    return NextResponse.json({ message: "Ball deleted successfully" });
   } catch (error) {
-    console.error('Error deleting ball:', error);
+    console.error("Error deleting ball:", error);
     return NextResponse.json(
-      { error: 'Failed to delete ball' },
+      { error: "Failed to delete ball" },
       { status: 500 }
     );
   }
 }
-

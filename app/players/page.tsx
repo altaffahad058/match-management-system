@@ -54,10 +54,17 @@ export default function PlayersPage() {
     try {
       const url = filterTeamId ? `/api/players?team_id=${filterTeamId}` : '/api/players';
       const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch players');
+      }
+      
       const data = await response.json();
-      setPlayers(data);
+      // Ensure data is always an array
+      setPlayers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching players:', error);
+      setPlayers([]); // Set to empty array on error
     } finally {
       setLoading(false);
     }
@@ -245,7 +252,14 @@ export default function PlayersPage() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {players.map((player) => (
+              {players.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                    {filterTeamId ? 'No players found for this team' : 'No players found'}
+                  </td>
+                </tr>
+              ) : (
+                players.map((player) => (
                 <tr key={player.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     {player.name}
@@ -274,7 +288,8 @@ export default function PlayersPage() {
                     </button>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
