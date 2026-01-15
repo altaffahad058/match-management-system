@@ -20,6 +20,7 @@ interface Match {
   match_date: string;
   venue: string;
   total_overs?: number;
+  status?: "scheduled" | "live" | "completed";
 }
 
 interface Player {
@@ -111,6 +112,11 @@ export default function MatchScorePage() {
       }
       const data = await response.json();
       setMatch(data);
+
+      // If match is already completed, show summary immediately
+      if (data.status === "completed") {
+        setMatchFinished(true);
+      }
     } catch (error) {
       console.error("Error fetching match:", error);
     } finally {
